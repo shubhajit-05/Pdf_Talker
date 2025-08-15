@@ -1,1 +1,3 @@
 swig
+libopenblas-dev
+libfaiss-dev

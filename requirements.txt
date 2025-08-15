@@ -1,7 +1,16 @@
-langchain==0.0.154
+# langchain==0.0.154
+# PyPDF2==3.0.1
+# python-dotenv==1.0.0
+# streamlit
+# faiss-cpu==1.12.0
+# altair<5
+# langchain-huggingface
+
+langchain
 PyPDF2==3.0.1
 python-dotenv==1.0.0
 streamlit
-faiss-cpu==1.12.0
-altair<5
+faiss-cpu
+altair
 langchain-huggingface
+langchain-community

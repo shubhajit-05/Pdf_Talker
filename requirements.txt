@@ -6,13 +6,23 @@
 # altair<5
 # langchain-huggingface
 
-langchain==0.0.154
+
+
+# LangChain core
+langchain>=0.2.10
+langchain-community>=0.2.10
+langchain-huggingface>=0.0.3
+langchain-google-genai>=1.0.4
+
+# Other deps
 PyPDF2==3.0.1
 python-dotenv==1.0.0
-streamlit
-faiss-cpu==1.12.0
-altair<5
-langchain-huggingface
-langchain-community
-langchain>=0.2.0
-langchain-google-genai>=1.0.4
+faiss-cpu>=1.12.0
+altair>=5.0.0
+
+# Streamlit (Python 3.13 compatible)
+streamlit>=1.38.0
+
+# Google AI SDK
+google-generativeai>=0.5.4
+

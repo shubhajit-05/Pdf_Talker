@@ -2,6 +2,8 @@
 
 A powerful Python application that enables natural language querying of PDF documents using AI. Upload any PDF and ask questions about its content - the AI will provide accurate answers based solely on the document's information.
 
+[Click this link to visit the application site](https://pdftalker.streamlit.app/)
+
 ## ✨ Features
 
 - 📤 **PDF Upload**: Simple drag-and-drop PDF upload interface

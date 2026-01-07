@@ -52,7 +52,7 @@ def main():
 
     #  SUPPORTED GEMINI MODEL
     llm = ChatGoogleGenerativeAI(
-        model="models/gemini-1.0-pro",
+        model="models/gemini-1.0-pro-latest",
         temperature=0.2,
         transport="rest",
     )

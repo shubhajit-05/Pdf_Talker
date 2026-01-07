@@ -10,57 +10,67 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 def main():
-    load_dotenv()
-    st.set_page_config(page_title="Ask your PDF")
-    st.header("Ask your PDF 💬")
+    # Streamlit config MUST be first
+    st.set_page_config(page_title="Ask your PDF", layout="centered")
 
-    # Upload PDF file
+    load_dotenv()
+
+    st.title("📄 Ask your PDF")
+    st.write("Upload a PDF and ask questions about its content.")
+
+    # Upload PDF
     pdf = st.file_uploader("Upload your PDF", type="pdf")
 
-    if pdf is not None:
-        # Extract text from PDF
-        pdf_reader = PdfReader(pdf)
-        text = "".join(page.extract_text() for page in pdf_reader.pages)
+    if pdf is None:
+        st.info("👆 Please upload a PDF file to continue.")
+        st.stop()   # 🔥 VERY IMPORTANT
 
-        # Split text into chunks
-        text_splitter = CharacterTextSplitter(
-            separator="\n",
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=len
-        )
-        chunks = text_splitter.split_text(text)
+    # Extract text
+    pdf_reader = PdfReader(pdf)
+    text = "".join(page.extract_text() or "" for page in pdf_reader.pages)
 
-        # Create embeddings
-        embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+    if not text.strip():
+        st.error("❌ Could not extract text from the PDF.")
+        st.stop()
 
-        # Create vector store (FAISS)
-        vectorstore = FAISS.from_texts(chunks, embedding=embeddings)
+    # Split text
+    text_splitter = CharacterTextSplitter(
+        separator="\n",
+        chunk_size=1000,
+        chunk_overlap=200,
+        length_function=len
+    )
+    chunks = text_splitter.split_text(text)
 
-        # User question
-        user_question = st.text_input("Ask a question about your PDF:")
+    # Embeddings
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
 
-        if user_question:
-            # Initialize Gemini LLM (REST to avoid asyncio issues)
-            llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",
-                temperature=0.2,
-                google_api_key=os.getenv("GEMINI_API_KEY"),
-                transport="rest",
-            )
+    # Vector store
+    vectorstore = FAISS.from_texts(chunks, embedding=embeddings)
 
-            # Create retriever
-            retriever = vectorstore.as_retriever()
+    # Question input
+    user_question = st.text_input("Ask a question about your PDF:")
 
-            # Create retrieval chain
-            doc_chain = create_stuff_documents_chain(llm)
-            qa_chain = create_retrieval_chain(retriever, doc_chain)
+    if not user_question:
+        st.stop()
 
-            # Get response
-            response = qa_chain.invoke({"input": user_question})
+    # LLM (Gemini, REST mode)
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash",
+        temperature=0.2,
+        google_api_key=os.getenv("GEMINI_API_KEY"),
+        transport="rest",
+    )
 
-            # Display answer
-            st.subheader("Answer:")
-            st.write(response["answer"])
+    retriever = vectorstore.as_retriever()
+
+    doc_chain = create_stuff_documents_chain(llm)
+    qa_chain = create_retrieval_chain(retriever, doc_chain)
+
+    with st.spinner("Thinking... 🤔"):
+        response = qa_chain.invoke({"input": user_question})
+
+    st.subheader("✅ Answer")
+    st.write(response["answer"])

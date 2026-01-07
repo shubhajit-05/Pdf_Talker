@@ -22,7 +22,7 @@ def main():
         pdf_reader = PdfReader(pdf)
         text = "".join(page.extract_text() for page in pdf_reader.pages)
 
-        # Split into chunks
+        # Split text into chunks
         text_splitter = CharacterTextSplitter(
             separator="\n",
             chunk_size=1000,
@@ -32,13 +32,18 @@ def main():
         chunks = text_splitter.split_text(text)
 
         # Create embeddings
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-        knowledge_base = FAISS.from_texts(chunks, embeddings)
+        embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
+
+        # Create vector store (FAISS)
+        vectorstore = FAISS.from_texts(chunks, embedding=embeddings)
 
         # User question
         user_question = st.text_input("Ask a question about your PDF:")
+
         if user_question:
-            # LLM (Gemini)
+            # Initialize Gemini LLM (REST to avoid asyncio issues)
             llm = ChatGoogleGenerativeAI(
                 model="gemini-1.5-flash",
                 temperature=0.2,
@@ -46,19 +51,16 @@ def main():
                 transport="rest",
             )
 
-            # Create RetrievalQA
+            # Create retriever
             retriever = vectorstore.as_retriever()
 
-            doc_chain = create_stuff_documents_chain(llm, prompt=None)
+            # Create retrieval chain
+            doc_chain = create_stuff_documents_chain(llm)
             qa_chain = create_retrieval_chain(retriever, doc_chain)
 
-            response = qa_chain.invoke({"input": query})
-            answer = response["answer"]
+            # Get response
+            response = qa_chain.invoke({"input": user_question})
 
-
-            # Get answer
-            response = qa.invoke({"query": user_question})
-            st.write(response["result"])
-
-if __name__ == '__main__':
-    main()
+            # Display answer
+            st.subheader("Answer:")
+            st.write(response["answer"])

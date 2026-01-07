@@ -11,70 +11,74 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 def main():
-    load_dotenv()
+    import os
     st.set_page_config(page_title="Ask your PDF")
     st.header("Ask your PDF 💬")
 
-    # Upload PDF file
+    #  Ensure API key exists
+    if not os.environ.get("GOOGLE_API_KEY"):
+        st.error("❌ GOOGLE_API_KEY not found. Set it in Streamlit Secrets.")
+        return
+
     pdf = st.file_uploader("Upload your PDF", type="pdf")
 
-    if pdf is not None:
-        # Extract text from PDF
-        pdf_reader = PdfReader(pdf)
-        text = "".join(page.extract_text() or "" for page in pdf_reader.pages)
+    if pdf is None:
+        return
 
-        # Split into chunks
-        text_splitter = CharacterTextSplitter(
-            separator="\n",
-            chunk_size=1000,
-            chunk_overlap=200,
-            length_function=len
-        )
-        chunks = text_splitter.split_text(text)
+    # Extract text
+    pdf_reader = PdfReader(pdf)
+    text = "".join(page.extract_text() or "" for page in pdf_reader.pages)
 
-        # Create embeddings
-        embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+    # Split text
+    text_splitter = CharacterTextSplitter(
+        separator="\n",
+        chunk_size=1000,
+        chunk_overlap=200,
+        length_function=len
+    )
+    chunks = text_splitter.split_text(text)
 
-        # 🔧 FIX: define vectorstore properly
-        vectorstore = FAISS.from_texts(chunks, embedding=embeddings)
+    # Embeddings
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
 
-        # User question
-        user_question = st.text_input("Ask a question about your PDF:")
+    vectorstore = FAISS.from_texts(chunks, embedding=embeddings)
 
-        if user_question:
-            # LLM (Gemini)
-            llm = ChatGoogleGenerativeAI(
-                model="models/gemini-1.5-flash",
-                temperature=0.2,
-                transport="rest",
-            )
+    user_question = st.text_input("Ask a question about your PDF:")
 
-            # 🔧 FIX: correct retriever source
-            retriever = vectorstore.as_retriever()
+    if not user_question:
+        return
 
-            prompt = ChatPromptTemplate.from_template(
-                """Use the following context to answer the question.
-                If you don't know the answer, say you don't know.
+    #  SUPPORTED GEMINI MODEL
+    llm = ChatGoogleGenerativeAI(
+        model="models/gemini-1.0-pro",
+        temperature=0.2,
+        transport="rest",
+    )
 
-                Context:
-                {context}
+    retriever = vectorstore.as_retriever()
 
-                Question:
-                {input}
-                """
-                )
+    #  REQUIRED PROMPT
+    from langchain.prompts import ChatPromptTemplate
 
-            # 🔧 FIX: use new retrieval chain properly
-            doc_chain = create_stuff_documents_chain(llm, prompt)
-            qa_chain = create_retrieval_chain(retriever, doc_chain)
+    prompt = ChatPromptTemplate.from_template(
+        """Use the following context to answer the question.
+        If you do not know the answer, say you do not know.
 
-            # 🔧 FIX: correct input variable
-            response = qa_chain.invoke({"input": user_question})
+        Context:
+        {context}
 
-            # 🔧 FIX: correct answer access
-            st.write(response["answer"])
+        Question:
+        {input}
+        """
+    )
+
+    doc_chain = create_stuff_documents_chain(llm, prompt)
+    qa_chain = create_retrieval_chain(retriever, doc_chain)
+
+    response = qa_chain.invoke({"input": user_question})
+    st.write(response["answer"])
 
 
 if __name__ == "__main__":

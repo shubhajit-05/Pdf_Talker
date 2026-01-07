@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 import streamlit as st
+from langchain.prompts import ChatPromptTemplate
 from PyPDF2 import PdfReader
 from langchain_text_splitters import CharacterTextSplitter 
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -53,8 +54,20 @@ def main():
             # 🔧 FIX: correct retriever source
             retriever = vectorstore.as_retriever()
 
+            prompt = ChatPromptTemplate.from_template(
+                """Use the following context to answer the question.
+                If you don't know the answer, say you don't know.
+
+                Context:
+                {context}
+
+                Question:
+                {input}
+                """
+                )
+
             # 🔧 FIX: use new retrieval chain properly
-            doc_chain = create_stuff_documents_chain(llm)
+            doc_chain = create_stuff_documents_chain(llm, prompt)
             qa_chain = create_retrieval_chain(retriever, doc_chain)
 
             # 🔧 FIX: correct input variable

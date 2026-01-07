@@ -6,7 +6,7 @@ faiss-cpu>=1.7.4
 
 # LangChain (stable & compatible)
 langchain==0.1.16
-langchain-community==0.0.30
+langchain-community==0.0.32
 langchain-text-splitters
 langchain-huggingface
 langchain-google-genai

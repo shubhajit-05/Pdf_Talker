@@ -5,7 +5,8 @@ from PyPDF2 import PdfReader
 from langchain_text_splitters import CharacterTextSplitter 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_community.chains import RetrievalQA
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 def main():
@@ -45,11 +46,14 @@ def main():
             )
 
             # Create RetrievalQA
-            qa = RetrievalQA.from_chain_type(
-                llm=llm,
-                retriever=knowledge_base.as_retriever(),
-                return_source_documents=False
-            )
+            retriever = vectorstore.as_retriever()
+
+            doc_chain = create_stuff_documents_chain(llm, prompt=None)
+            qa_chain = create_retrieval_chain(retriever, doc_chain)
+
+            response = qa_chain.invoke({"input": query})
+            answer = response["answer"]
+
 
             # Get answer
             response = qa.invoke({"query": user_question})

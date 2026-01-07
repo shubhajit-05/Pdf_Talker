@@ -1,20 +1,15 @@
-# LangChain core
-langchain>=0.2.10
-langchain-community>=0.2.10
-langchain-huggingface>=0.0.3
-langchain-google-genai>=1.0.4
-
-# Other deps
-PyPDF2==3.0.1
-python-dotenv==1.0.0
-faiss-cpu>=1.12.0
-altair>=5.0.0
-
-# Streamlit (Python 3.13 compatible)
+# Python runtime handled by Streamlit (use python-3.11)
 streamlit>=1.38.0
+python-dotenv==1.0.0
+PyPDF2==3.0.1
+faiss-cpu>=1.7.4
 
-# Google AI SDK
-google-generativeai>=0.5.4
-
+# LangChain (stable & compatible)
+langchain==0.1.16
+langchain-community==0.0.30
 langchain-text-splitters
-langchain-community
+langchain-huggingface
+langchain-google-genai
+
+# Google AI
+google-generativeai>=0.5.4

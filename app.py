@@ -45,7 +45,7 @@ def main():
         if user_question:
             # LLM (Gemini)
             llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",
+                model="models/gemini-1.5-flash",
                 temperature=0.2,
                 transport="rest",
             )

@@ -16,3 +16,4 @@ streamlit>=1.38.0
 # Google AI SDK
 google-generativeai>=0.5.4
 
+langchain-text-splitters

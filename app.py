@@ -42,8 +42,8 @@ def main():
             llm = ChatGoogleGenerativeAI(
                 model="gemini-1.5-flash",
                 temperature=0.2,
-                google_api_key=os.getenv("GEMINI_API_KEY")
-                transport="rest"
+                google_api_key=os.getenv("GEMINI_API_KEY"),
+                transport="rest",
             )
 
             # Create RetrievalQA
